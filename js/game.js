@@ -8,15 +8,16 @@ var boxesdown;
 var particles;
 var coins;
 
-var keyup = 38;		//usefull keycode
-var keyleft = 37;		//usefull keycode
-var keyright = 39;		//usefull keycode
-var keyw = 87;			//usefull keycode
-var keya = 65;			//usefull keycode
-var keyd = 68;			//usefull keycode
+var keyup = 38;
+var keyleft = 37;
+var keyright = 39;
+var keyw = 87;
+var keya = 65;
+var keyd = 68;
 var left = 0;
 var right = 0;
 var jump = 0;
+var gui;
 var startButton = false;
 var endButton = true;
 var boxSpawn;
@@ -25,6 +26,8 @@ var score;
 var scoreTimer;
 var endtimer;
 var maincounter;
+var cw;  // canvas width
+var ch;  // canvas height
 
 document.ontouchstart = handleTouchStart;
 document.ontouchend = handleTouchEnd;
@@ -53,44 +56,54 @@ function Player(x, y, stage){
 	shape = new Shape();
 	var s = 10;
 	shape.isAlive=true;
-	shape.graphics.beginFill('rgba(90,150,200,1)').rect(0,0,s,s);
+	shape.graphics.beginFill('rgba(40,180,250,1)').rect(0,0,s,s).beginFill('rgba(40,180,250,0.1)').rect(-3,-3,s+6,s+6);
 	shape.s = s;
 	shape.x = x;
 	shape.y = y;
 	shape.canjump = false;
 	shape.jumping=0;
 	shape.snapToPixel = true;
+	shape.cache(-3,-3,s+6,s+6);
 	shape.onfloor = false;
 	shape.vspeed = 0;
 	shape.hspeed = 0;
-	shape.snapToPixel = true;
 	stage.addChild(shape);
 	return shape;
 }
 
 function Particle(x,y,s,vspeed,hspeed,color,stage, collider){
 	shape = new Shape();//
-	shape.graphics.beginFill(color).rect(0,0,s,s) ;
-	shape.x=x;
-	shape.y=y;
-	shape.vspeed=vspeed;
-	shape.hspeed=hspeed;
+	shape.graphics.beginFill(color).rect(0,0,s,s);
+	shape.x = x-s/2;
+	shape.y = y-s/2;
+	shape.vspeed = vspeed;
+	shape.hspeed = hspeed;
 	shape.collider = collider;
-	shape.timer=120;
+	shape.timer = 120;
 	shape.snapToPixel = true;
 	shape.cache(0,0,s,s);
-	stage.addChild(shape)
+	shape.glow = new Shape();
+	if(!collider){
+		shape.glow.graphics.beginFill(color).rect(-s/2,-s/2,s*2,s*2);
+		shape.glow.alpha=0.25;
+		shape.glow.snapToPixel = true;
+		shape.glow.cache(-s/2,-s/2,s*2,s*2);
+		shape.glow.x = x;55
+		shape.glow.y = y;
+		stage.addChild(shape.glow);
+	}
+	stage.addChild(shape);
 	particles.push(shape);
 }
 
 function Coin(x,y,stage){
 	shape = new Shape();
 	shape.s = 10;
-	shape.graphics.beginFill('rgba(200,170,30,1)').rect(0,0,shape.s,shape.s);
+	shape.graphics.beginFill('rgba(230,190,40,1)').rect(0,0,shape.s,shape.s).beginFill('rgba(250,230,30,0.15)').rect(-3,-3,shape.s+6,shape.s+6);
 	shape.x = x;
 	shape.y = y;
 	shape.snapToPixel = true;
-	shape.cache(0,0,shape.s,shape.s);
+	shape.cache(-3,-3,shape.s+6,shape.s+6);
 	stage.addChild(shape);
 	coins.push(shape);
 }
@@ -126,7 +139,43 @@ function Box(x, y, w, h, stage, type){
 
 }
 
+
+function resizeCanvas(){
+	var cwidth = $('#screen').width();
+	var cheight = $('#screen').height();
+	if(cwidth < 640 || cheight < 480){
+		switchFullscreen();
+		var minim = Math.min(cwidth,cheight*(4/3));
+		var w = cwidth*(minim/cwidth);
+		var h = cheight*(minim/((4/3)*cheight));
+		$("#canvas").css({'width':w});
+		$("#canvas").css({'height':h});
+	}
+	else{
+		$("#canvas").css({'width':'640px'});
+		$("#canvas").css({'height':'480px'});
+	}
+	cw = cwidth;
+	ch = cheight;
+
+}
+
+function switchFullscreen(){
+	body = document.getElementById("body");
+	if (body.requestFullScreen) {  
+	  body.requestFullScreen();  
+	} else if (body.mozRequestFullScreen) {  
+	  body.mozRequestFullScreen();  
+	} else if (body.webkitRequestFullScreen) {  
+	  body.webkitRequestFullScreen();  
+	} 
+}
+
+
 function init(){
+	
+	$(window).resize(function(){resizeCanvas();});
+	setTimeout(resizeCanvas,1);
 	
 	canvas = document.getElementById('canvas');
 	stage = new Stage(canvas);
@@ -147,10 +196,10 @@ function startMenu(){
 	startBox.x=0;
 	startBox.y=150;
 	stage.addChild(startBox);
-	var startText = new Text("SHUMP", "45px Arial", "#EEF");
+	var startText = new Text("SHUMP", "45px Impact", "#EEF");
 	startText.textAlign = "center";
 	startText.x = 320;
-	startText.y = 160;
+	startText.y = 155;
 	stage.addChild(startText);
 	var startText2 = new Text("press any key to continue", "10px Arial", "#EEF");
 	startText2.textAlign = "center";
@@ -164,24 +213,31 @@ function startMenu(){
 function startLevel(){
 	reset();
 	Ticker.setPaused(false);
+	background = new Shape();
+	background.graphics.beginRadialGradientFill(["#112","#27B"],[0.1,0.9],320,240,50,320,240,600).rect(0,0,640,480);
+	background.cache(0,0,640,480);
+	stage.addChild(background);
+	
 	player = new Player(320, 100, stage);
 	player.vspeed=0;
-	scoreText = new Text("SCORE: ", "20px Arial", "#AAF");
+	
+	gui = new Container();
+	scoreText = new Text("SCORE: ", "17px Verdana", "#AFF");
 	scoreText.x = 10;
-	scoreText.y = 10;
-	stage.addChild(scoreText);
+	scoreText.y = 5;
+	scoreBack = new Shape();
+	scoreBack.graphics.beginFill('rgba(50,180,250,0.35)').rect(0,0,150,30);
+	gui.addChild(scoreBack, scoreText);	
+	stage.addChild(gui);
 	Box(300,120,60,15,stage,"up");
 }
 
 function tick(){
 	maincounter++;
 	if (endtimer > 0)endtimer--;
-	if (scoreTimer == 0){
-		diff+=0.01;
-		score++;
-		scoreTimer = 60;
-	}
-	else scoreTimer--;
+	diff+=0.0002;
+	scoreText.text = "SCORE: " + score;
+	stage.setChildIndex(gui,0);
 	
 	for(i in boxesup){
 		var box = boxesup[i];
@@ -220,8 +276,13 @@ function tick(){
 		part.vspeed*=0.9;
 		part.alpha-=1/120;
 		part.timer--;
+		part.glow.x = part.x;
+		part.glow.y = part.y;
+		part.glow.alpha-=1/480;
+		part.glow.alpha+=Math.random()*0.1-0.05;
 		if(part.timer<=0){
 			particles.splice(i,1);
+			stage.removeChild(part.glow);
 			stage.removeChild(part);
 		}
 		if(part.collider && part.hspeed + part.vspeed > 0){
@@ -243,7 +304,15 @@ function tick(){
 		}		
 	}
 	if(player.isAlive){
-		scoreText.text = "SCORE: " + score;
+		if (scoreTimer == 0){
+		
+			score++;
+			scoreTimer = 60;
+		}
+		scoreTimer--;
+		if(maincounter%5==0 && !player.jumping){
+			Particle(player.x+5,player.y+5,5,0,0,'rgba(40,170,250,1)',stage, false);}
+		
 		if(player.vspeed<10 && !player.onfloor)
 			player.vspeed += 0.5;
 		
@@ -365,15 +434,15 @@ function death(){//player dies, score screen displayed
 	}
 	
 	var deathBox = new Shape();
-	deathBox.graphics.beginFill('rgba(10,10,10,0.8)').rect(0,-6,640,53).beginFill('rgba(200,50,50,0.7)').rect(0,0,640,50);
+	deathBox.graphics.beginFill('rgba(200,50,50,0.1)').rect(0,-20,640,90).beginFill('rgba(10,10,10,0.8)').rect(0,-3,640,56).beginFill('rgba(200,50,50,0.7)').rect(0,0,640,50);
 	deathBox.x=0;
 	deathBox.y=150;
-	stage.addChild(deathBox);
-	var deathText = new Text("YOR DED!.... SCORE: " + score, "30px Arial", "#FFF");
+	gui.addChild(deathBox);
+	var deathText = new Text("YOR DED!.... SCORE: " + score, "30px Impact", "#FFF");
 	deathText.textAlign = "center";
 	deathText.x = 320;
-	deathText.y = 160;
-	stage.addChild(deathText);
+	deathText.y = 156;
+	gui.addChild(deathText);
 	stage.update();
 	endButton = false;
 }
@@ -451,12 +520,12 @@ function handleTouchStart(e){
 			/*startButton = false;
 			startMenu();*/
 		}
-		if(touch.pageX  <200+canvasx)left = true;
-		if((touch.pageX  >=200+canvasx && touch.pageX  <=440+canvasx) || touch.pageY<300+canvasY){
+		if(touch.pageX  <cw/2)left = true;
+		if((touch.pageX  >=cw/2-50 && touch.pageX  <=cw/2+50) || touch.pageY<ch/2){
 			jump = true;
 			player.canjump = false;
 		}
-		if(touch.pageX  >440+canvasx)right = true;
+		if(touch.pageX  >cw/2)right = true;
 
 	}
 }
@@ -468,12 +537,12 @@ function handleTouchEnd(e){
 	var	touches = e.changedTouches;
 	for(i in touches){
 		var touch = touches[i];
-		if(touch.pageX  <200+canvasx)left = false;
-		if((touch.pageX  >=200+canvasx && touch.pageX  <=440+canvasx) || touch.pageY<300+canvasY){
+		if(touch.pageX  <cw/2)left = false;
+		if((touch.pageX  >=cw/2-50 && touch.pageX  <=cw/2+50) || touch.pageY<ch/2){
 			jump = false;
 			player.jumping=0;
 		}
-		if(touch.pageX  >440+canvasx)right = false;
+		if(touch.pageX  >cw/2)right = false;
 	}
 }
 
