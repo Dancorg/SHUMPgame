@@ -114,18 +114,18 @@ function Box(x, y, w, h, stage, type){
 	var boxes;
 	switch(type){
 		case "up":
-		color = 'rgba(120,100,180,1)';
+		color = 'rgba(140,80,220,0.75)';
 		speed = 1+Math.round(Math.random()*diff);
 		boxes = boxesup;
 		break;
 		case "down":
-		color = 'rgba(190,90,20,1)';
+		color = 'rgba(250,100,0,0.75)';
 		speed = -1-Math.round(Math.random()*diff);
 		boxes = boxesdown;
 		break;
 	}
 	shape = new Shape();
-	shape.graphics.beginFill(color).drawRoundRect(0,0,w,h,4);
+	shape.graphics.beginFill(color).drawRoundRect(0,0,w,h,4).beginFill(color).drawRoundRect(3,3,w-6,h-6,3);
 	shape.color = color;
 	shape.x = x;
 	shape.y = y;
@@ -196,10 +196,10 @@ function startMenu(){
 	startBox.x=0;
 	startBox.y=150;
 	stage.addChild(startBox);
-	var startText = new Text("SHUMP", "45px Verdana", "#EEF");
+	var startText = new Text("SHUMP", "45px impact", "#EEF");
 	startText.textAlign = "center";
 	startText.x = 320;
-	startText.y = 160;
+	startText.y = 155;
 	stage.addChild(startText);
 	var startText2 = new Text("press any key to continue", "10px Arial", "#EEF");
 	startText2.textAlign = "center";
@@ -222,11 +222,11 @@ function startLevel(){
 	player.vspeed=0;
 	
 	gui = new Container();
-	scoreText = new Text("SCORE: ", "17px Verdana", "#AFF");
+	scoreText = new Text("SCORE: ", "17px impact", "#AFF");
 	scoreText.x = 10;
 	scoreText.y = 5;
 	scoreBack = new Shape();
-	scoreBack.graphics.beginFill('rgba(50,180,250,0.35)').rect(0,0,150,30);
+	scoreBack.graphics.beginFill('rgba(50,180,250,0.35)').drawRoundRectComplex(0,0,150,30,0,0,0,30)//.rect(0,0,150,30);
 	gui.addChild(scoreBack, scoreText);	
 	stage.addChild(gui);
 	Box(300,120,60,15,stage,"up");

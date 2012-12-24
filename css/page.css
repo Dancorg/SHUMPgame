@@ -36,3 +36,8 @@ body,html{
 	position:absolute;
 
 }
+
+@font-face{
+	font-family: 'pixelart';
+	src: url('pixelart.ttf');
+}
