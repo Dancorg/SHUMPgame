@@ -328,7 +328,7 @@ function tick(){
 			preciseColllision(player, b);
 		}
 		
-		if(player.canjump)player.jumping=7;
+		if(player.canjump)player.jumping=9;
 		if(player.x+player.s<0 || player.x-player.s>640 || player.y+player.s<0 || player.y-player.s>480)
 			death();
 		player.y += player.vspeed;
@@ -388,13 +388,13 @@ function preciseColllision(player, b){
 		px = player.x + i*player.hspeed/div;
 		py = player.y + i*player.vspeed/div;
 		if(player.x+i*player.hspeed/div < b.x+b.w && player.x+player.s+i*player.hspeed/div > b.x && player.y+i*player.vspeed/div<b.y+b.h && player.y+player.s+i*player.vspeed/div>b.y ){
-			if(player.y<b.y)
+			if(py<b.y)
 				choque = "floor";
-			if(player.x+player.s*0.5<b.x) 
+			else if(px+player.s*0.5<b.x) 
 				choque = "lwall";
-			if(player.x+player.s*0.5>b.x+b.w)
+			else if(px+player.s*0.5>b.x+b.w)
 				choque = "rwall";
-			if(player.y+player.s>b.y+b.h && b.speed-player.vspeed>0)
+			else if(py+player.s>b.y+b.h && b.speed-player.vspeed>0)
 				choque = "ceiling";
 			break;
 		}
